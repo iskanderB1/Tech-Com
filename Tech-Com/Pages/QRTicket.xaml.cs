@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using Tech_Com.Managers;
@@ -28,10 +29,21 @@ public partial class QRTicket : ContentPage
             while (true)
             {
                 //it's hacky, it's unreliable and i hate it. the trifecta of a perfect program
-                string hostname = Dns.GetHostName();
+                string addressString = string.Empty;
+                
+                string[] addressStrings = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(i => i.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+                .SelectMany(i => i.GetIPProperties().UnicastAddresses)
+                .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+                .Select(a => a.Address.ToString())
+                .ToArray();
+                
+                foreach(string _ip in addressStrings)
+                {
+                    Console.Write(_ip);
+                }
                 IPEndPoint? ip;
-                var thing = Dns.GetHostEntry(hostname).AddressList;
-                if (!IPEndPoint.TryParse(Dns.GetHostEntry(hostname).AddressList[0].ToString(), out ip))
+                if (!IPEndPoint.TryParse(addressString, out ip))
                 {
                     await DisplayAlert("Oops! something went wrong", "make sure you are connected to a network", "ok");
                     //wait 10sec and check again
